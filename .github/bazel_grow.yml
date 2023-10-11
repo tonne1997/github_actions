@@ -1,0 +1,49 @@
+name: Bazel CI Full Pipeline
+
+on:
+  push: { }
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup SSH
+      uses: MrSquaare/ssh-setup-action@v1
+      with:
+          host: github.com
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Clone repository
+      run: git@github.com:toandaominh1997/grow.git
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin' # See 'Supported distributions' for available options
+        java-version: '17'
+        check-latest: true
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    - uses: bazelbuild/setup-bazelisk@v2
+    - name: Check Version
+      run: |
+        bazel version
+        python --version
+        python3 --version
+    - name: Check bazel info
+      run: |
+        cd grow
+        bazel info
+    - name: Build bazel module
+      run: |
+        cd grow
+        bazel build //...
+    - name: Test bazel common module
+      run: |
+        cd grow
+        bazel test //...
