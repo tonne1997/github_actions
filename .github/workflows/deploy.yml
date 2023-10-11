@@ -27,16 +27,16 @@ jobs:
           private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - name: Clone repository
       run: git clone git@github.com:toandaominh1997/grow.git
-    - name: Start minikube
-      run: |
-        cd grow
-        bazel run //scripts:start_minikube
-
     - name: Setup Helm
       run: |
         cd grow
         bazel run //scripts:install_helm
         helm version
+    - name: Start minikube
+      run: |
+        cd grow
+        bazel run //scripts:start_minikube
+
     - name: Setup Skaffold
       run: |
         cd grow
