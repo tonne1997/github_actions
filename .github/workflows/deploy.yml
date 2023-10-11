@@ -26,7 +26,10 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Start minikube
-      uses: medyagh/setup-minikube@latest
+      run: |
+        cd grow
+        bazel run //scripts:start_minikube
+
     - name: Setup Helm
       uses: hiberbee/github-action-helm@1.5.0
       with:
