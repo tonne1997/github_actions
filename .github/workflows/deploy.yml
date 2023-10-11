@@ -1,0 +1,72 @@
+name: Deploy to Kubernetes
+
+on:
+  push: { }
+
+jobs:
+  pipeline:
+    name: Deploy Pipeline
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v3
+    - name: Setup SSH
+      uses: MrSquaare/ssh-setup-action@v1
+      with:
+          host: github.com
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin' # See 'Supported distributions' for available options
+        java-version: '17'
+        check-latest: true
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    - name: Start minikube
+      uses: medyagh/setup-minikube@latest
+    - name: Setup Helm
+      uses: hiberbee/github-action-helm@1.5.0
+      with:
+        repository-config: test/repositories.yaml
+    - name: Setup Skaffold
+      run: |
+        curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && sudo install skaffold /usr/local/bin/
+    - name: Check skaffold version
+      run: skaffold version
+    - name: Create hermes namespace
+      run: kubectl create namespace hermes
+    - name: Clone repository
+      run: git clone git@github.com:toandaominh1997/grow.git
+    - name: XGBoost Server
+      run: |
+        cd grow
+        skaffold run --no-prune=false --cache-artifacts=false -f src/mlops/kotlin/xgboost/deploy/skaffold.yaml -p dev
+    - name: Iris Service
+      run: |
+        cd grow
+        cd src/mlops/iris_service
+        skaffold build --push
+    - name: Monitoring service
+      run: |
+        cd grow
+        skaffold run -f services/monitoring/grafana/skaffold.yaml -p prod --no-prune=false --cache-artifacts=false
+    #    - name: Storage service
+    #      run: |
+    #        skaffold run -f services/storage/minio/skaffold.yaml -p prod --no-prune=false --cache-artifacts=false
+    #    - name: Database service
+    #      run: |
+    #        skaffold run -f services/database/postgres/skaffold.yaml -p prod --no-prune=false --cache-artifacts=false
+    #    - name: CI/CD service
+    #      run: |
+    #        skaffold run -f services/cicd/jenkins/skaffold.yaml -p prod --no-prune=false --cache-artifacts=false
+    #    - name: ELK service
+    #      run: |
+    #        skaffold run -f services/elk/elasticsearch/skaffold.yaml -p prod --no-prune=false --cache-artifacts=false
+    #        skaffold run -f services/elk/logstash/skaffold.yaml -p prod --no-prune=false --cache-artifacts=false
+    #        skaffold run -f services/elk/kibana/skaffold.yaml -p prod --no-prune=false --cache-artifacts=false
+    
+    - name: Get Helm releases
+      run: helm list
