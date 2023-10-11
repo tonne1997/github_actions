@@ -17,7 +17,7 @@ jobs:
           host: github.com
           private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - name: Clone repository
-      run: git@github.com:toandaominh1997/grow.git
+      run: git clone git@github.com:toandaominh1997/grow.git
     - uses: actions/setup-java@v3
       with:
         distribution: 'temurin' # See 'Supported distributions' for available options
