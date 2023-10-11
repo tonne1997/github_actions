@@ -33,26 +33,16 @@ jobs:
         repository-config: test/repositories.yaml
     - name: Setup Skaffold
       run: |
-        curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && sudo install skaffold /usr/local/bin/
-    - name: Check skaffold version
-      run: skaffold version
-    - name: Create hermes namespace
-      run: kubectl create namespace hermes
+        cd grow
+        bazel run //scripts:install_skaffold
+        skaffold version
     - name: Clone repository
       run: git clone git@github.com:toandaominh1997/grow.git
-    - name: XGBoost Server
-      run: |
-        cd grow
-        skaffold run --no-prune=false --cache-artifacts=false -f src/mlops/kotlin/xgboost/deploy/skaffold.yaml -p dev
-    - name: Iris Service
-      run: |
-        cd grow
-        cd src/mlops/iris_service
-        skaffold build --push
-    - name: Monitoring service
+    - name: K8s service
       run: |
         cd grow
         skaffold run -f services/monitoring/grafana/skaffold.yaml -p prod --no-prune=false --cache-artifacts=false
+        skaffold run -p prod --no-prune=false --cache-artifacts=false -f grow/loadtesting/locust/deploy/skaffold.yaml
     #    - name: Storage service
     #      run: |
     #        skaffold run -f services/storage/minio/skaffold.yaml -p prod --no-prune=false --cache-artifacts=false
