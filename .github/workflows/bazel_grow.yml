@@ -39,6 +39,10 @@ jobs:
       run: |
         cd grow
         bazel info
+    - name: Check bazel outdated
+      run: |
+        cd grow
+        bazel run //bazel/outdated/bazel:outdated
     - name: Build bazel module
       run: |
         cd grow
