@@ -34,7 +34,10 @@ jobs:
         python --version
         python3 --version
     - name: Clone repository
-      run: git clone git@github.com:toandaominh1997/grow.git
+      run: |
+        git clone git@github.com:toandaominh1997/grow.git
+        cd grow
+        git checkout config_service
     - name: Check bazel info
       run: |
         cd grow
